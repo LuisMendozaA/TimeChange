@@ -1,0 +1,105 @@
+import pandas as pd
+import numpy as np
+import matplotlib.pyplot as plt
+import seaborn as sns
+from datetime import datetime
+
+# Load and preprocess the data
+data = """
+ENTREGABLE | ALL ET | ET CENTRO MC 6 | ET BALCON MC 10 | ET NORTE MC 12/13/14/18/19 | ET PTO TAMBOPATA MC 7 | ET CUARTEL MC 9 | ET TROPEZON MC 15 | VERSION
+1A | 2024-06-01 00:00:00 | 2024-08-05 00:00:00 | 2024-08-15 00:00:00 | 2024-08-10 00:00:00 | 2024-08-31 00:00:00 | 2024-08-16 00:00:00 | 2024-08-31 00:00:00 | V7
+1B | 2024-06-01 00:00:00 |  | 2024-09-04 00:00:00 | 2024-08-20 00:00:00 | 2024-11-25 00:00:00 | 2024-09-17 00:00:00 | 2024-11-11 00:00:00 | V7
+2A | 2024-06-01 00:00:00 | 2025-03-13 00:00:00 | 2025-03-14 00:00:00 | 2025-03-24 00:00:00 | 2025-03-31 00:00:00 | 2025-03-14 00:00:00 | 2025-03-14 00:00:00 | V7
+2B | 2024-06-01 00:00:00 | 2025-03-17 00:00:00 | 2025-06-23 00:00:00 | 2025-06-19 00:00:00 | 2025-06-30 00:00:00 | 2025-03-19 00:00:00 | 2025-03-19 00:00:00 | V7
+3A | 2024-06-01 00:00:00 | 2025-06-19 00:00:00 | 2025-07-10 00:00:00 | 2025-07-09 00:00:00 | 2025-07-30 00:00:00 | 2025-06-29 00:00:00 | 2025-06-29 00:00:00 | V7
+3B | 2024-06-01 00:00:00 | 2025-06-28 00:00:00 | 2025-08-14 00:00:00 | 2025-08-13 00:00:00 | 2025-09-08 00:00:00 | 2025-07-17 00:00:00 | 2025-07-09 00:00:00 | V7
+4A | 2024-06-01 00:00:00 | 2025-07-10 00:00:00 | 2025-09-08 00:00:00 | 2025-09-12 00:00:00 | 2025-10-03 00:00:00 | 2025-08-02 00:00:00 | 2025-07-27 00:00:00 | V7
+4B | 2024-06-01 00:00:00 | 2025-07-11 00:00:00 | 2025-09-17 00:00:00 | 2025-09-29 00:00:00 | 2025-10-23 00:00:00 | 2025-08-05 00:00:00 | 2025-07-31 00:00:00 | V7
+5 | 2024-06-01 00:00:00 | 2025-07-24 00:00:00 | 2025-10-14 00:00:00 | 2025-11-08 00:00:00 | 2025-11-23 00:00:00 | 2025-08-20 00:00:00 | 2025-08-17 00:00:00 | V7
+6 | 2024-06-01 00:00:00 | 2025-08-05 00:00:00 | 2025-11-06 00:00:00 | 2025-12-06 00:00:00 | 2025-12-28 00:00:00 | 2025-09-01 00:00:00 | 2025-09-03 00:00:00 | V7
+1A | 2024-06-01 00:00:00 | 2024-08-05 00:00:00 | 2024-08-15 00:00:00 | 2024-08-10 00:00:00 | 2024-08-31 00:00:00 | 2024-08-16 00:00:00 | 2024-08-31 00:00:00 | V6
+1B | 2024-06-01 00:00:00 |  | 2024-09-04 00:00:00 | 2024-08-20 00:00:00 | 2024-11-25 00:00:00 | 2024-09-17 00:00:00 | 2024-11-11 00:00:00 | V6
+2A | 2024-06-01 00:00:00 | 2025-01-21 00:00:00 | 2025-03-14 00:00:00 | 2025-03-24 00:00:00 | 2025-03-31 00:00:00 | 2025-03-14 00:00:00 | 2025-03-14 00:00:00 | V6
+2B | 2024-06-01 00:00:00 | 2025-03-17 00:00:00 | 2025-06-20 00:00:00 | 2025-06-17 00:00:00 | 2025-06-23 00:00:00 | 2025-06-11 00:00:00 | 2025-06-06 00:00:00 | V6
+3A | 2024-06-01 00:00:00 | 2025-05-30 00:00:00 | 2025-07-07 00:00:00 | 2025-07-07 00:00:00 | 2025-07-13 00:00:00 | 2025-06-17 00:00:00 | 2025-06-20 00:00:00 | V6
+3B | 2024-06-01 00:00:00 | 2025-06-12 00:00:00 | 2025-08-09 00:00:00 | 2025-08-11 00:00:00 | 2025-09-06 00:00:00 | 2025-07-21 00:00:00 | 2025-07-28 00:00:00 | V6
+4A | 2024-06-01 00:00:00 | 2025-06-27 00:00:00 | 2025-09-03 00:00:00 | 2025-09-10 00:00:00 | 2025-10-01 00:00:00 | 2025-08-06 00:00:00 | 2025-08-22 00:00:00 | V6
+4B | 2024-06-01 00:00:00 | 2025-06-30 00:00:00 | 2025-09-08 00:00:00 | 2025-09-20 00:00:00 | 2025-10-16 00:00:00 | 2025-08-19 00:00:00 | 2025-09-11 00:00:00 | V6
+5 | 2024-06-01 00:00:00 | 2025-07-20 00:00:00 | 2025-09-19 00:00:00 | 2025-10-11 00:00:00 | 2025-11-18 00:00:00 | 2025-09-04 00:00:00 | 2025-10-26 00:00:00 | V6
+6 | 2024-06-01 00:00:00 | 2025-08-01 00:00:00 | 2025-10-25 00:00:00 | 2025-11-12 00:00:00 | 2025-12-25 00:00:00 | 2025-09-23 00:00:00 | 2025-11-22 00:00:00 | V6
+"""
+
+# Parse the data into a DataFrame
+from io import StringIO
+df = pd.read_csv(StringIO(data), sep='|', skipinitialspace=True, parse_dates=True)
+df = df.dropna(how='all', axis=1)  # Remove empty columns
+
+# Clean column names
+df.columns = [col.strip() for col in df.columns]
+
+# Separate V6 and V7
+v7 = df[df['VERSION'] == 'V7'].drop('VERSION', axis=1)
+v6 = df[df['VERSION'] == 'V6'].drop('VERSION', axis=1)
+
+# Melt to long format for comparison
+v7_long = v7.melt(id_vars=['ENTREGABLE', 'ALL ET'], var_name='ET_TEAM', value_name='V7_DATE')
+v6_long = v6.melt(id_vars=['ENTREGABLE', 'ALL ET'], var_name='ET_TEAM', value_name='V6_DATE')
+
+# Merge V6 and V7
+comparison = pd.merge(v6_long, v7_long, on=['ENTREGABLE', 'ET_TEAM'])
+
+# Convert dates and calculate differences
+comparison['V6_DATE'] = pd.to_datetime(comparison['V6_DATE'], errors='coerce')
+comparison['V7_DATE'] = pd.to_datetime(comparison['V7_DATE'], errors='coerce')
+comparison['DAYS_DIFF'] = (comparison['V7_DATE'] - comparison['V6_DATE']).dt.days
+
+# Remove rows where both dates are missing
+comparison = comparison.dropna(subset=['V6_DATE', 'V7_DATE'], how='all')
+
+# 1. Heatmap of Schedule Changes
+plt.figure(figsize=(12, 8))
+heatmap_data = comparison.pivot_table(index='ET_TEAM', columns='ENTREGABLE', values='DAYS_DIFF', aggfunc='mean')
+sns.heatmap(heatmap_data, cmap='coolwarm', center=0, annot=True, fmt=".0f", 
+            linewidths=.5, cbar_kws={'label': 'Days Change (V7 - V6)'})
+plt.title('Schedule Changes Between V6 and V7 (Positive = Delay)')
+plt.tight_layout()
+plt.show()
+
+# 2. Average Delay per Work Team
+plt.figure(figsize=(10, 6))
+avg_change = comparison.groupby('ET_TEAM')['DAYS_DIFF'].mean().sort_values()
+avg_change.plot(kind='barh', color=np.where(avg_change > 0, 'salmon', 'skyblue'))
+plt.axvline(0, color='black', linestyle='--', linewidth=0.5)
+plt.title('Average Schedule Change per Work Team')
+plt.xlabel('Average Days Change (V7 - V6)')
+plt.ylabel('Work Team')
+plt.tight_layout()
+plt.show()
+
+# 3. Timeline Comparison for Entregable 3A
+entregable = '3A'
+et_3a = comparison[comparison['ENTREGABLE'] == entregable].sort_values('DAYS_DIFF')
+
+plt.figure(figsize=(10, 6))
+for i, row in et_3a.iterrows():
+    plt.plot([row['V6_DATE'], row['V7_DATE']], [row['ET_TEAM'], row['ET_TEAM']], 
+             color='gray', alpha=0.3)
+    plt.scatter(row['V6_DATE'], row['ET_TEAM'], color='skyblue', label='V6' if i == 0 else "")
+    plt.scatter(row['V7_DATE'], row['ET_TEAM'], color='salmon', label='V7' if i == 0 else "")
+plt.title(f'Timeline Comparison for Entregable {entregable}')
+plt.xlabel('Date')
+plt.ylabel('Work Team')
+plt.legend()
+plt.grid(True, axis='x', linestyle='--', alpha=0.5)
+plt.tight_layout()
+plt.show()
+
+# 4. Change Distribution
+plt.figure(figsize=(10, 6))
+sns.boxplot(data=comparison, x='DAYS_DIFF', color='lightblue')
+plt.axvline(comparison['DAYS_DIFF'].median(), color='red', linestyle='--', label=f'Median: {comparison["DAYS_DIFF"].median():.0f} days')
+plt.title('Distribution of Schedule Changes')
+plt.xlabel('Days Change (V7 - V6)')
+plt.legend()
+plt.tight_layout()
+plt.show()
